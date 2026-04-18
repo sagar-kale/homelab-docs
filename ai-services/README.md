@@ -20,7 +20,7 @@ graph TD
     NOMIC["nomic-embed-text\n768-dim embeddings"]
 
     KOKORO["Kokoro TTS\nport 8880 · ~0.5s\naf_bella · ONNX CPU"]
-    CHATTERBOX["Chatterbox Turbo\nport 8882 · ~2.2s\nVoice clone · ROCm GPU"]
+    CHATTERBOX["Chatterbox Turbo\nport 8882 · ~2.1-2.4s\nVoice clone · ROCm GPU"]
 
     USER --> MIC --> WHISPER --> VISIONAGENT
     USER --> CAM --> YOLO --> VISIONAGENT
