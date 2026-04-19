@@ -35,7 +35,8 @@ sequenceDiagram
     D2->>MS: Register — send public WireGuard key
     MS-->>D1: Here's Device B's public key + endpoint
     MS-->>D2: Here's Device A's public key + endpoint
-    D1<-->D2: Direct WireGuard tunnel (peer-to-peer)\nManagement server no longer involved
+    D1->>D2: Direct WireGuard tunnel (peer-to-peer)
+    D2->>D1: Management server no longer involved
 ```
 
 **Key points:**
