@@ -40,19 +40,48 @@ graph LR
 
 ## Performance Benchmarks
 
-Measured with `llama-bench` on 2026-04-12, Vulkan RADV, llama.cpp build 8765, flags: `-ngl 99 -mmp 0 -fa 1`
+### All models — Ollama ROCm (2026-04-17, isolated runs, amdgpu 31.10, gfx1151)
 
-### Baseline (fresh context)
+Each model tested individually with GPU at 95%+ busy — confirms real GPU compute, no CPU fallback.
 
-| Model | Size on disk | Prompt processing (pp512) | Generation (tg128) |
-|-------|-------------|--------------------------|-------------------|
+| Model | Size | Generation speed | Notes |
+|-------|------|-----------------|-------|
+| gemma4:26b | 17 GB | **54.4 t/s** | Full GPU |
+| gemma4:e4b | 9.6 GB | **55.2 t/s** | Full GPU |
+| qwen3.5:9b | 6.6 GB | **32.7 t/s** | Full GPU |
+| gemma3:27b | 17 GB | **11.8 t/s** | Full GPU — older arch, slower |
+| qwen2.5:32b | 19 GB | **11.0 t/s** | Full GPU |
+| gpt-oss:120b | 65 GB | **26.6 t/s** | Partial GPU (32/37 layers) |
+| qwen3.5:122b | 81 GB | **9.3 t/s** | Partial GPU — 81GB model in 115GB budget |
+| nomic-embed-text | 274 MB | — | Embedding only |
+| GLM-OCR (Q8_0) | 2.2 GB | — | Vision OCR — needs image input |
+
+### Backend comparison — gemma4:26b Q4_K
+
+| Backend | t/s |
+|---------|-----|
+| **Native Ollama 0.20.7 ROCm** | **54.4 t/s** |
+| llama-swap + Vulkan (llama.cpp b8765) | 52.3 t/s |
+| llama.cpp HIP build (b8765) | 48.6 t/s |
+| Ollama 0.21.0 ROCm Docker | 46.2 t/s |
+| Ollama 0.20.5 Vulkan (old production) | ~34 t/s |
+| Windows LM Studio (same hardware) | ~56 t/s |
+
+Native Ollama ROCm (0.20.7) edges out Vulkan — the native install gets better-tuned ROCm libs than the Docker image.
+
+### Llama-bench baseline — Vulkan, fresh context (pp512 / tg128)
+
+Measured with llama.cpp b8765, `-ngl 99 -mmp 0 -fa 1`
+
+| Model | Size | Prompt processing | Generation |
+|-------|------|------------------|-----------|
 | gemma4:26b Q4_K_XL | 15.9 GB | 1,232 t/s | **52.3 t/s** |
 | gemma4:e4b Q4_K_XL | 4.7 GB | 1,919 t/s | **56.2 t/s** |
-| nomic-embed-text F16 | 261 MB | 36,227 t/s | n/a (embedding only) |
+| nomic-embed-text F16 | 261 MB | 36,227 t/s | n/a |
 
-### Generation speed vs context depth (tg128)
+### Generation speed vs context depth (gemma4:26b, tg128)
 
-Speed degrades as context grows — unified memory bandwidth is the limiting factor at very long contexts.
+Speed degrades as context grows — unified memory bandwidth is the bottleneck at very long contexts.
 
 | Context depth | gemma4:26b | gemma4:e4b |
 |--------------|-----------|-----------|
